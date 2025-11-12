@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_gravity="center"
+        android:gravity="center">
+
+
+    <TextView
+            android:text="Dodaj Kontakt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/addContactText"/>
+    <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:text=""
+            android:hint="Imie"
+            android:ems="10"
+            android:id="@+id/name"/>
+    <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:text=""
+            android:hint="Nazwisko"
+            android:ems="10"
+            android:id="@+id/surname"/>
+    <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:text=""
+            android:hint="Telefon"
+            android:ems="10"
+            android:id="@+id/phoneNumber"/>
+    <Button
+            android:text="Dodaj"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/add"/>
+</LinearLayout>

@@ -1,66 +1,91 @@
 package com.example.contactlistsqliteapp;
+
 import androidx.appcompat.app.AppCompatActivity;
-import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.Integer.parseInt;
-
 public class MainActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
-    private EditText noteInput;
-    private Button saveButton;
-    private TextView notesDisplay;
     private RecyclerView contactsRecyclerView;
+    private ContactAdapter adapter;
+    private List<Contact> contacts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Inicjalizacja DatabaseHelper
         dbHelper = new DatabaseHelper(this);
 
         contactsRecyclerView = findViewById(R.id.contactsRecyclerView);
+        Button addContactButton = findViewById(R.id.addContact);
 
-        List<Contact> contacts = new ArrayList<>();
+        contacts = new ArrayList<>();
 
-        // Wyświetl notatki przy starcie
-        loadNotes(contacts);
+        adapter = new ContactAdapter(contacts);
+        contactsRecyclerView.setAdapter(adapter);
+        contactsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        addContactButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, AddContact.class);
+            startActivity(intent);
+        });
     }
 
-    private void loadNotes(List<Contact> contacts) {
-        // Uzyskanie dostępu do bazy danych w trybie odczytu
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadContacts();
+    }
+
+    private void loadContacts() {
+        contacts.clear();
+
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        // Zapytanie, które pobierze wszystkie dane z tabeli
-        String[] projection = {DatabaseHelper.COLUMN_ID, DatabaseHelper.COLUMN_NAME, DatabaseHelper.COLUMN_SURNAME, DatabaseHelper.COLUMN_PHONE_NUMBER};
+        // Запрос для получения всех контактов
+        String[] projection = {
+                DatabaseHelper.COLUMN_ID,
+                DatabaseHelper.COLUMN_NAME,
+                DatabaseHelper.COLUMN_SURNAME,
+                DatabaseHelper.COLUMN_PHONE_NUMBER
+        };
+
         Cursor cursor = db.query(
                 DatabaseHelper.TABLE_CONTACTS,
                 projection,
-                null, null, null, null, null
+                null, null, null, null,
+                DatabaseHelper.COLUMN_NAME + " ASC" // Сортировка по имени
         );
 
-        StringBuilder notes = new StringBuilder();
         while (cursor.moveToNext()) {
-            contacts.add(new Contact(
-                    cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_NAME),
-                            cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_SURNAME),
-                                    cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_PHONE_NUMBER)));
+            String name = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_NAME));
+            String surname = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_SURNAME));
+            String phone = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_PHONE_NUMBER));
+
+            contacts.add(new Contact(name, surname, phone));
         }
+
         cursor.close();
         db.close();
 
-        notesDisplay.setText(notes.toString());
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (dbHelper != null) {
+            dbHelper.close();
+        }
     }
 }

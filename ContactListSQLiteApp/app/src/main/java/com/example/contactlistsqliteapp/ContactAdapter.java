@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -12,12 +13,17 @@ import java.util.List;
 public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.UserViewHolder> {
 
     private List<Contact> contactList;
+    private OnContactDeleteListener deleteListener;
 
-    public ContactAdapter(List<Contact> contactList) {
-        this.contactList = contactList;
+    public interface OnContactDeleteListener {
+        void onContactDelete(long id);
     }
 
-    // Ta metoda tworzy nowy ViewHolder, gdy RecyclerView go potrzebuje.
+    public ContactAdapter(List<Contact> contactList, OnContactDeleteListener deleteListener) {
+        this.contactList = contactList;
+        this.deleteListener = deleteListener;
+    }
+
     @NonNull
     @Override
     public UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -25,29 +31,41 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.UserView
         return new UserViewHolder(view);
     }
 
-    // Ta metoda wypełnia ViewHolder danymi dla określonej pozycji na liście.
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
         Contact currentContact = contactList.get(position);
+
+        holder.idText.setText("ID: " + currentContact.getId());
         holder.nameText.setText(currentContact.getName());
         holder.surnameText.setText(currentContact.getSurname());
         holder.phoneNumberText.setText(currentContact.getPhone());
+
+        holder.itemView.setOnClickListener(v -> {
+            if (deleteListener != null) {
+                deleteListener.onContactDelete(currentContact.getId());
+                Toast.makeText(v.getContext(),
+                        "Usunięto: " + currentContact.getName(),
+                        Toast.LENGTH_SHORT).show();
+            }
+            return true;
+        });
+
     }
 
-    // Ta metoda zwraca liczbę elementów na liście.
     @Override
     public int getItemCount() {
         return contactList.size();
     }
 
-    // Wewnętrzna klasa ViewHolder przechowuje referencje do widoków wiersza.
     public static class UserViewHolder extends RecyclerView.ViewHolder {
+        public TextView idText;
         public TextView nameText;
         public TextView surnameText;
         public TextView phoneNumberText;
 
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);
+            idText = itemView.findViewById(R.id.idText);
             nameText = itemView.findViewById(R.id.nameText);
             surnameText = itemView.findViewById(R.id.surnameText);
             phoneNumberText = itemView.findViewById(R.id.phoneNumber);

@@ -16,6 +16,8 @@ public class AddContact extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_contact);
 
+        dbHelper = new DatabaseHelper(this);
+
         EditText name = findViewById(R.id.name);
         EditText surname = findViewById(R.id.surname);
         EditText phoneNumber = findViewById(R.id.phoneNumber);
@@ -23,29 +25,41 @@ public class AddContact extends AppCompatActivity {
         Button addButton = findViewById(R.id.add);
 
         addButton.setOnClickListener(v -> {
-            String nameString = name.getText().toString();
-            String surnameString = surname.getText().toString();
-            String phoneNumberString = phoneNumber.getText().toString();
+            String nameString = name.getText().toString().trim();
+            String surnameString = surname.getText().toString().trim();
+            String phoneNumberString = phoneNumber.getText().toString().trim();
 
             if (nameString.isEmpty() || surnameString.isEmpty() || phoneNumberString.isEmpty()) {
+                Toast.makeText(this, "Wszystkie pola muszą być wypełnione!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Uzyskanie dostępu do bazy danych w trybie zapisu
             SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-            // Użycie ContentValues do bezpiecznego wstawiania danych
             ContentValues values = new ContentValues();
             values.put(DatabaseHelper.COLUMN_NAME, nameString);
             values.put(DatabaseHelper.COLUMN_SURNAME, surnameString);
             values.put(DatabaseHelper.COLUMN_PHONE_NUMBER, phoneNumberString);
 
-            // Wstawienie nowego wiersza
-            db.insert(DatabaseHelper.TABLE_CONTACTS, null, values);
+            long newRowId = db.insert(DatabaseHelper.TABLE_CONTACTS, null, values);
             db.close();
 
-            Intent intent = new Intent(AddContact.this, MainActivity.class);
-            startActivity(intent);
+            if (newRowId != -1) {
+                Toast.makeText(this, "Kontakt dodany!", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(AddContact.this, MainActivity.class);
+                startActivity(intent);
+                finish();
+            } else {
+                Toast.makeText(this, "Blad", Toast.LENGTH_SHORT).show();
+            }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (dbHelper != null) {
+            dbHelper.close();
+        }
     }
 }
